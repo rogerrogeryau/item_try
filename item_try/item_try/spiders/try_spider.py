@@ -40,7 +40,7 @@ class TrySpiderSpider(scrapy.Spider):
 	        	request.meta['item'] = item
 	        	yield request
 
-        # testing conrol = whether loop through all posts across pages
+        #testing conrol = whether loop through all posts across pages
         if response.xpath('//a[@rel="next"]/@href').extract_first() is not None:
         	next_btn_url = response.xpath('//a[@rel="next"]/@href').extract_first()
         	absolute_next_btn_url = response.urljoin(next_btn_url)
@@ -54,14 +54,26 @@ class TrySpiderSpider(scrapy.Spider):
     	#if it is in first page
     	# if response.xpath('//a[@rel="prev"]/text()').extract_first():
     	item = response.meta['item']
-    	
 
     	content = response.xpath('.//div[starts-with(@id,"post_message_")]//td[@class="alt2 inner-quote"]/text()').extract()
     	content = ''.join(content)
     	content = content.split()
     	content = ''.join(content)
     	item['content']=content
-    	yield item
+
+    	#proceed to next content page
+    	next_button_url = response.xpath('//a[@class ="smallfont" and @rel = "next"]/@href').extract_first()   	
+    	abs_next_button_url = response.urljoin(next_button_url)
+    	request3 = scrapy.Request(url =abs_next_button_url, callback = self.parse_inner_page)
+    	request3.meta['item'] = item
+
+    	if response.xpath('//a[@class = "smallfont" and @rel ="next"]//text()').extract_first() is None:
+    		yield item
+
+
+
+
+    	# yield item
 
 
     	# if response.xpath('//a[@class ="smallfont" and @rel = "next"]/@href').extract()[1]:
