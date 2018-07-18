@@ -17,6 +17,7 @@ class TrySpiderSpider(scrapy.Spider):
     allowed_domains = ['backpackers.com.tw']
     start_urls = ['https://www.backpackers.com.tw/forum/forumdisplay.php?f=25']
 
+
     def parse(self, response):
     	# loaderr = ItemLoader(item = ItemTryItem(), response = response)
     	# loaderr.add_xpath('title','//a[@id="thread_title_5984"]/text()')
@@ -25,27 +26,30 @@ class TrySpiderSpider(scrapy.Spider):
         # pass
         trs = response.xpath('//tbody[@id = "threadbits_forum_25"]/tr')
         for tr in trs:
+        	#only includes non-ad posts
         	if tr.xpath('./td[@colspan]').extract_first() is None:
 	        	item = ItemTryItem()
 	        	item['title'] = tr.xpath('.//*[starts-with(@id,"td_threadtitle")]//div/a/text()').extract_first()
 	        	item['num_of_reply']=tr.xpath('./td[@align="center"]/text()').extract()[0]
 	        	item['num_of_view']=tr.xpath('./td[@align="center"]/text()').extract()[1]
 	        	item['last_reply_date'] = tr.xpath('.//td[@class ="alt2"]/div[@class="smallfont"]/text()').extract()[0].strip() 
+	        	#next page button
 	        	url = tr.xpath('.//a[starts-with(@id,"thread_title")]/@href').extract_first()
 	        	abs_url = response.urljoin(url)
 
 	        	item['abs_url'] = abs_url
 
 	        	request = scrapy.Request(url =abs_url, callback = self.parse_inner_page)
+	        	#store scraped data which is to be retrieved later 
 	        	request.meta['item'] = item
 	        	yield request
 
         #testing conrol = whether loop through all posts across pages
-        if response.xpath('//a[@rel="next"]/@href').extract_first() is not None:
-        	next_btn_url = response.xpath('//a[@rel="next"]/@href').extract_first()
-        	absolute_next_btn_url = response.urljoin(next_btn_url)
-        	request2 = scrapy.Request(url =absolute_next_btn_url, callback = self.parse)
-        	yield request2
+        # if response.xpath('//a[@rel="next"]/@href').extract_first() is not None:
+        # 	next_btn_url = response.xpath('//a[@rel="next"]/@href').extract_first()
+        # 	absolute_next_btn_url = response.urljoin(next_btn_url)
+        # 	request2 = scrapy.Request(url =absolute_next_btn_url, callback = self.parse)
+        # 	yield request2
 
 
 
